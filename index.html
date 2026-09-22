@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portale Richieste — Lo.Com</title>
+<style>
+  :root{
+    --arancio:#F2780A;--arancio-scuro:#C45E05;--inchiostro:#14181D;
+    --grigio:#5C6672;--linea:#DCE0E5;--fondo:#F3F4F6;--bianco:#FFFFFF;--rosso:#C22B2B;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fondo);color:var(--inchiostro);
+    font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    min-height:100vh;display:flex;flex-direction:column;}
+  header{background:var(--inchiostro);color:var(--bianco);padding:18px 28px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+  header .marchio{font-size:20px;font-weight:800;letter-spacing:.5px}
+  header .marchio span{color:var(--arancio)}
+  header .etichetta{font-size:14px;color:#9AA4B0}
+  main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:32px 20px 60px}
+  h1{font-size:24px;margin:0 0 6px}
+  .intro{color:var(--grigio);font-size:14px;margin:0 0 26px;line-height:1.5}
+  .scheda{background:var(--bianco);border:1px solid var(--linea);border-radius:10px;
+    padding:24px;margin-bottom:18px;}
+  .scheda h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--arancio);
+    margin:0 0 18px;font-weight:700;}
+  .riga{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .riga.tre{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:620px){.riga,.riga.tre{grid-template-columns:1fr}}
+  .campo{display:flex;flex-direction:column;margin-bottom:16px}
+  .campo:last-child{margin-bottom:0}
+  label{font-size:13px;font-weight:600;margin-bottom:6px}
+  label .opz{font-weight:400;color:var(--grigio)}
+  input,select,textarea{font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--linea);
+    border-radius:6px;background:var(--bianco);color:var(--inchiostro);width:100%;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--arancio);
+    box-shadow:0 0 0 3px rgba(242,120,10,.2);}
+  textarea{resize:vertical;min-height:70px}
+  .scelte{display:flex;gap:10px;flex-wrap:wrap}
+  .scelta{flex:1;min-width:150px}
+  .scelta input{position:absolute;opacity:0;pointer-events:none}
+  .scelta span{display:block;text-align:center;padding:12px 10px;border:1px solid var(--linea);
+    border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;background:var(--bianco);}
+  .scelta input:checked + span{background:var(--arancio);border-color:var(--arancio);color:var(--bianco);}
+  .scelta input:focus-visible + span{box-shadow:0 0 0 3px rgba(242,120,10,.45)}
+  .conteggio{font-size:13px;color:var(--grigio);margin-top:10px;
+    background:var(--fondo);border-radius:6px;padding:9px 12px;}
+  .conteggio strong{color:var(--inchiostro)}
+  .azioni{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  button{font:inherit;font-weight:700;font-size:16px;padding:14px 26px;border:none;
+    border-radius:7px;cursor:pointer;background:var(--arancio);color:var(--bianco);}
+  button:hover{background:var(--arancio-scuro)}
+  button:disabled{opacity:.6;cursor:default}
+  button:focus-visible{outline:3px solid rgba(242,120,10,.5);outline-offset:2px}
+  button.secondario{background:transparent;color:var(--grigio);border:1px solid var(--linea);
+    font-size:14px;padding:13px 18px}
+  button.secondario:hover{background:var(--fondo);color:var(--inchiostro)}
+  .errore{color:var(--rosso);font-size:13px;margin-top:12px;display:none}
+  .errore.visibile{display:block}
+  .esito{display:none;border-radius:8px;padding:16px;margin-top:16px;font-size:14px;line-height:1.6;}
+  .esito.ok{background:#EAF6EC;border:1px solid #B8DCC0;}
+  .esito.ko{background:#FBEAEA;border:1px solid #E7B4B4;}
+  .esito.visibile{display:block}
+  .avviso{background:#FEF3E7;border:1px solid #F2B87A;color:#8a4a05;border-radius:8px;
+    padding:13px 16px;margin-bottom:16px;font-size:14px;line-height:1.5;}
+  .anteprima{white-space:pre-wrap;font-family:ui-monospace,"Courier New",monospace;font-size:13px;
+    background:var(--fondo);border:1px solid var(--linea);border-radius:6px;padding:14px;
+    margin-top:14px;max-height:260px;overflow:auto;}
+  footer{background:var(--inchiostro);color:#7E8894;font-size:12px;padding:14px 28px}
+  .nascosto{display:none !important}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="marchio">LO<span>.</span>COM</div>
+  <div class="etichetta">Portale Richieste</div>
+</header>
+
+<main>
+  <h1>Richiesta ferie e permessi</h1>
+  <p class="intro">Compila i campi e premi <strong>Invia la richiesta</strong>. La richiesta viene inviata direttamente all'ufficio personale, con il riepilogo in PDF allegato. Riceverai conferma qui sotto.</p>
+
+  <div class="scheda">
+    <h2>Chi richiede</h2>
+    <div class="riga">
+      <div class="campo">
+        <label for="sede">Sede</label>
+        <select id="sede"><option value="">— seleziona —</option></select>
+      </div>
+      <div class="campo">
+        <label for="dipendente">Dipendente</label>
+        <select id="dipendente"><option value="">— prima scegli la sede —</option></select>
+      </div>
+    </div>
+    <div class="riga">
+      <div class="campo" id="boxNomeLibero" style="display:none">
+        <label for="nomeLibero">Nome e cognome</label>
+        <input type="text" id="nomeLibero" placeholder="Es. Mario Rossi">
+      </div>
+      <div class="campo">
+        <label for="mansione">Mansione</label>
+        <input type="text" id="mansione" placeholder="Es. Banco / Magazzino / Officina">
+      </div>
+    </div>
+    <div class="riga">
+      <div class="campo">
+        <label for="email">E-mail <span class="opz">(facoltativa)</span></label>
+        <input type="email" id="email" placeholder="nome@esempio.it">
+      </div>
+      <div class="campo">
+        <label for="telefono">Telefono <span class="opz">(facoltativo)</span></label>
+        <input type="tel" id="telefono" placeholder="333 1234567">
+      </div>
+    </div>
+  </div>
+
+  <div class="scheda">
+    <h2>Cosa richiede</h2>
+    <div class="campo">
+      <div class="scelte">
+        <label class="scelta"><input type="radio" name="tipo" value="ferie" checked><span>Ferie</span></label>
+        <label class="scelta"><input type="radio" name="tipo" value="permesso_giorni"><span>Permesso a giorni</span></label>
+        <label class="scelta"><input type="radio" name="tipo" value="permesso_ore"><span>Permesso a ore</span></label>
+      </div>
+    </div>
+
+    <div id="bloccoGiorni">
+      <div class="riga">
+        <div class="campo"><label for="dal">Dal giorno</label><input type="date" id="dal"></div>
+        <div class="campo"><label for="al">Al giorno</label><input type="date" id="al"></div>
+      </div>
+      <div class="conteggio" id="contGiorni">Totale: <strong>—</strong></div>
+    </div>
+
+    <div id="bloccoOre" class="nascosto">
+      <div class="riga tre">
+        <div class="campo"><label for="giorno">Giorno</label><input type="date" id="giorno"></div>
+        <div class="campo"><label for="dalleOre">Dalle ore</label><input type="time" id="dalleOre"></div>
+        <div class="campo"><label for="alleOre">Alle ore</label><input type="time" id="alleOre"></div>
+      </div>
+      <div class="conteggio" id="contOre">Totale: <strong>—</strong></div>
+    </div>
+  </div>
+
+  <div class="scheda">
+    <h2>Note</h2>
+    <div class="campo">
+      <label for="note">Note per l'ufficio personale <span class="opz">(facoltative)</span></label>
+      <textarea id="note" placeholder="Es. sostituito da... / disponibile a rientrare in caso di necessità"></textarea>
+    </div>
+  </div>
+
+  <div class="avviso" id="avvisoUrgente" style="display:none"></div>
+  <div class="azioni">
+    <button type="button" id="btnInvia">Invia la richiesta</button>
+    <button type="button" class="secondario" id="btnCopia">Copia il testo</button>
+  </div>
+  <div class="errore" id="errore"></div>
+
+  <div class="esito" id="esito"></div>
+  <div class="anteprima" id="anteprima" style="display:none"></div>
+</main>
+
+<footer>LO.COM. Logistica Commerciale S.r.l. — Via Pecorina, 111 — 19038 Sarzana (SP) — Tel. 0187.627205</footer>
+
+<script>
+/* ============================================================
+   CONFIGURAZIONE — le uniche righe da modificare
+   ============================================================ */
+
+// 1) Incolla qui l'URL dell'App web di Google Apps Script (finisce con /exec)
+var ENDPOINT = "https://script.google.com/macros/s/AKfycbwWxfP1jv2aCQAUL0DGi6nYi9Z4jxiODYJHn2NOZQGvW34TOv24eyxSPTiNawxiosH2/exec";
+
+// 2) Solo informativo (l'invio reale avviene dal motore Google)
+var DESTINATARIO = "gestionepersonalelocom@gmail.com";
+
+// 3) Preavviso minimo (in ore) sotto cui la richiesta parte con oggetto "URGENTE".
+//    Differenziato per tipo. DEVE coincidere con gli stessi valori in Codice.gs.
+var PREAVVISO_MIN_ORE = { ferie: 72, permesso: 24 };
+// Ora convenzionale d'inizio giornata per ferie/permessi a giorni (per il preavviso)
+var ORA_INIZIO_GIORNO = 8;
+
+// Sedi + elenco dipendenti
+var SEDI = {
+  "Sarzana": { mail:"italnolosarzana@gmail.com", dipendenti:[
+    ["Luca Secco","Magazzino"],["Marco Caiti","Banco / Commerciale"],
+    ["Riccardo Caglieri","Magazzino"],["Jacopo Benassi","Jolly Area Nord"],
+    ["Armando Lombardo","Manutentore / Officina"],["Andrea Marchese","Manutentore / Officina"],
+    ["Luli Brahimaj","Autista Area Nord"],["Fabrizio Caiti","Rental Manager"]
+  ]},
+  "La Spezia": { mail:"italnololaspezia@gmail.com", dipendenti:[
+    ["Anas Taoussi","Banco / Commerciale"],["Domenico Russo","Magazzino"],
+    ["Alessandro Taddei","Manutentore / Officina"],["Koulibaly","Manutentore / Officina"]
+  ]},
+  "Massa": { mail:"italnolomassa@gmail.com", dipendenti:[
+    ["Stefano Chini","Banco / Commerciale"],["Massimiliano Mata","Magazzino"],
+    ["Elettra D'Aquino","Magazzino"],["Gianluca Galli","Manutentore / Magazzino"]
+  ]},
+  "Viareggio": { mail:"italnoloviareggio@gmail.com", dipendenti:[
+    ["Domenico Aprea","Banco / Commerciale"],["Cesare Ricci","Manutentore / Officina"],
+    ["Alessandro Caiezza","Magazzino"],["Alessandro Sichi","Autista / Trasportatore"]
+  ]},
+  // --- AREA SUD --- organico reale (skill gestione-ferie-sud §7b, confermato 22/07/2026)
+  "Pisa": { mail:"italnolopisa@gmail.com", dipendenti:[
+    ["Yari Zanobini","Banco / Commerciale (referente)"],["Michel Saragoni","Banco / Commerciale"],
+    ["Marketin Gryka","Magazzino"],["Daniele Chericoni","Meccanico / Capo Officina"],
+    ["Andrea Ghelardoni","Meccanico"],["Nicola Scala","Magazzino"],
+    ["Samuele Romano","Magazzino"],["Matteo Paolini","Magazzino"],
+    ["Emiliano Bottoni","Rental Manager Area Sud"],["Riccardo Cichetti","Autista dedicato Pisa"]
+  ]},
+  "Lucca": { mail:"italnololucca@gmail.com", dipendenti:[
+    ["Matteo Balducchi","Banco / Commerciale (referente)"],["Matteo Pieretti","Banco / Commerciale"],
+    ["Luca Faraoni","Meccanico / Officina"],["Mirco Mariani","Meccanico / Magazzino"]
+  ]},
+  "Pontedera": { mail:"italnolopontedera@gmail.com", dipendenti:[
+    ["Francesco Badiali","Banco / Commerciale (referente)"],
+    ["Antonio Carlomagno","Meccanico / Magazzino"],["Manuel Iacopi","Meccanico / Magazzino"]
+  ]},
+  "Empoli": { mail:"italnoloempoli@gmail.com", dipendenti:[
+    ["Martina Mariotti","Banco / Commerciale (referente)"],["Kristian Saurini","Magazzino"],
+    ["Safer Merdita","Magazzino"]
+  ]}
+};
+
+var CORRIERI = [["Franco Mongili","Autista / Corriere Area Nord+Sud"]];
+
+/* ============================================================
+   Da qui in giù non serve modificare nulla
+   ============================================================ */
+
+var selSede = document.getElementById('sede');
+var selDip = document.getElementById('dipendente');
+var boxNomeLibero = document.getElementById('boxNomeLibero');
+var inpNomeLibero = document.getElementById('nomeLibero');
+var inpMansione = document.getElementById('mansione');
+var errore = document.getElementById('errore');
+var esito = document.getElementById('esito');
+
+Object.keys(SEDI).forEach(function(s){
+  var o = document.createElement('option'); o.value = s; o.textContent = s; selSede.appendChild(o);
+});
+var oc = document.createElement('option');
+oc.value = "Corriere interno"; oc.textContent = "Corriere interno (nessuna sede)";
+selSede.appendChild(oc);
+
+selSede.addEventListener('change', function(){
+  var lista = selSede.value === "Corriere interno"
+    ? CORRIERI : (SEDI[selSede.value] ? SEDI[selSede.value].dipendenti : []);
+  selDip.innerHTML = '';
+  var vuota = document.createElement('option');
+  vuota.value=''; vuota.textContent='— seleziona —'; selDip.appendChild(vuota);
+  lista.forEach(function(d){
+    var o = document.createElement('option');
+    o.value=d[0]; o.textContent=d[0]; o.dataset.mansione=d[1]; selDip.appendChild(o);
+  });
+  var altro = document.createElement('option');
+  altro.value='__altro__'; altro.textContent='Altro (scrivi il nome)'; selDip.appendChild(altro);
+  if (lista.length === 0){ selDip.value='__altro__'; selDip.dispatchEvent(new Event('change')); }
+});
+
+selDip.addEventListener('change', function(){
+  var libero = selDip.value === '__altro__';
+  boxNomeLibero.style.display = libero ? 'flex' : 'none';
+  var op = selDip.options[selDip.selectedIndex];
+  if (!libero && op && op.dataset.mansione) inpMansione.value = op.dataset.mansione;
+  if (libero) inpMansione.value = '';
+});
+
+var bloccoGiorni = document.getElementById('bloccoGiorni');
+var bloccoOre = document.getElementById('bloccoOre');
+function tipoScelto(){ return document.querySelector('input[name="tipo"]:checked').value; }
+document.querySelectorAll('input[name="tipo"]').forEach(function(r){
+  r.addEventListener('change', function(){
+    var ore = tipoScelto() === 'permesso_ore';
+    bloccoGiorni.classList.toggle('nascosto', ore);
+    bloccoOre.classList.toggle('nascosto', !ore);
+    aggiornaAvvisoUrgente();
+  });
+});
+
+var dal=document.getElementById('dal'), al=document.getElementById('al');
+var giorno=document.getElementById('giorno');
+var dalleOre=document.getElementById('dalleOre'), alleOre=document.getElementById('alleOre');
+
+function itData(v){ if(!v) return ''; var p=v.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function calcolaGiorni(){
+  if(!dal.value || !al.value) return null;
+  var a=new Date(dal.value), b=new Date(al.value);
+  if (b<a) return -1;
+  var tot=Math.round((b-a)/86400000)+1, lav=0, d=new Date(a);
+  while(d<=b){ var g=d.getDay(); if(g!==0&&g!==6) lav++; d.setDate(d.getDate()+1); }
+  return { tot:tot, lav:lav };
+}
+function aggiornaGiorni(){
+  var r=calcolaGiorni(), box=document.getElementById('contGiorni');
+  if(r===null){ box.innerHTML='Totale: <strong>—</strong>'; return; }
+  if(r===-1){ box.innerHTML='<strong style="color:#C22B2B">La data finale è prima di quella iniziale.</strong>'; return; }
+  box.innerHTML='Totale: <strong>'+r.tot+' giorni di calendario</strong> — di cui '+r.lav+' lavorativi (lun-ven, festività escluse dal conteggio)';
+  aggiornaAvvisoUrgente();
+}
+dal.addEventListener('change', aggiornaGiorni);
+al.addEventListener('change', aggiornaGiorni);
+dal.addEventListener('change', function(){ if(!al.value) al.value=dal.value; aggiornaGiorni(); });
+
+function calcolaOre(){
+  if(!dalleOre.value || !alleOre.value) return null;
+  var a=dalleOre.value.split(':'), b=alleOre.value.split(':');
+  return (b[0]*60 + +b[1]) - (a[0]*60 + +a[1]);
+}
+function aggiornaOre(){
+  var m=calcolaOre(), box=document.getElementById('contOre');
+  if(m===null){ box.innerHTML='Totale: <strong>—</strong>'; return; }
+  if(m<=0){ box.innerHTML='<strong style="color:#C22B2B">L\'orario finale deve essere dopo quello iniziale.</strong>'; return; }
+  var h=Math.floor(m/60), r=m%60;
+  box.innerHTML='Totale: <strong>'+h+' ore'+(r?' e '+r+' minuti':'')+'</strong>';
+  aggiornaAvvisoUrgente();
+}
+dalleOre.addEventListener('change', aggiornaOre);
+alleOre.addEventListener('change', aggiornaOre);
+giorno.addEventListener('change', aggiornaAvvisoUrgente);
+
+// --- Preavviso: quanto manca all'inizio dell'assenza richiesta ---
+function inizioMs(){
+  if(tipoScelto()==='permesso_ore'){
+    if(!giorno.value || !dalleOre.value) return null;
+    var p=giorno.value.split('-'), t=dalleOre.value.split(':');
+    return new Date(+p[0], p[1]-1, +p[2], +t[0], +t[1]).getTime();
+  }
+  if(!dal.value) return null;
+  var q=dal.value.split('-');
+  return new Date(+q[0], q[1]-1, +q[2], ORA_INIZIO_GIORNO, 0).getTime();
+}
+function preavvisoOre(){
+  var ms=inizioMs();
+  return ms===null ? null : (ms - Date.now())/3600000;
+}
+function sogliaPreavviso(){
+  return tipoScelto()==='ferie' ? PREAVVISO_MIN_ORE.ferie : PREAVVISO_MIN_ORE.permesso;
+}
+function isUrgente(){
+  var p=preavvisoOre();
+  return p!==null && p < sogliaPreavviso();
+}
+function aggiornaAvvisoUrgente(){
+  var box=document.getElementById('avvisoUrgente'), p=preavvisoOre(), soglia=sogliaPreavviso();
+  if(p===null || p>=soglia){ box.style.display='none'; return; }
+  var ore=Math.max(0,Math.round(p));
+  box.style.display='block';
+  box.innerHTML='⏱ <strong>Richiesta a breve termine.</strong> Preavviso di circa '+ore+
+    ' ore (minimo previsto: '+soglia+' ore): verrà inviata con oggetto <strong>URGENTE</strong>.';
+}
+
+function nomeDipendente(){
+  return selDip.value === '__altro__' ? inpNomeLibero.value.trim() : selDip.value;
+}
+function verifica(){
+  var e=[];
+  if(!selSede.value) e.push('Scegli la sede.');
+  if(!nomeDipendente()) e.push('Indica il dipendente.');
+  if(tipoScelto()==='permesso_ore'){
+    if(!giorno.value) e.push('Indica il giorno del permesso.');
+    if(!dalleOre.value || !alleOre.value) e.push('Indica orario di inizio e fine.');
+    else if(calcolaOre()<=0) e.push('L\'orario finale deve essere dopo quello iniziale.');
+  } else {
+    if(!dal.value || !al.value) e.push('Indica la data di inizio e di fine.');
+    else if(calcolaGiorni()===-1) e.push('La data finale è prima di quella iniziale.');
+  }
+  return e;
+}
+function etichettaTipo(){
+  var t=tipoScelto();
+  if(t==='ferie') return 'FERIE';
+  if(t==='permesso_giorni') return 'PERMESSO A GIORNI';
+  return 'PERMESSO ORARIO';
+}
+function oggi(){
+  var d=new Date();
+  return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();
+}
+function periodo(){
+  return tipoScelto()==='permesso_ore'
+    ? itData(giorno.value)
+    : itData(dal.value)+' - '+itData(al.value);
+}
+function dettaglio(){
+  if(tipoScelto()==='permesso_ore'){
+    var m=calcolaOre(), h=Math.floor(m/60), min=m%60;
+    return 'Richiesta di n. '+h+(min?' ore e '+min+' minuti':' ore')+' di permesso, giorno '+itData(giorno.value)+', dalle '+dalleOre.value+' alle '+alleOre.value+'.';
+  }
+  var g=calcolaGiorni();
+  return 'Richiesta di n. '+g.tot+' giorni ('+g.lav+' lavorativi lun-ven), dal '+itData(dal.value)+' al '+itData(al.value)+' compresi.';
+}
+function datiRichiesta(){
+  return {
+    tipoLabel: etichettaTipo(),
+    sede: selSede.value,
+    nome: nomeDipendente(),
+    mansione: inpMansione.value.trim(),
+    email: document.getElementById('email').value.trim(),
+    telefono: document.getElementById('telefono').value.trim(),
+    note: document.getElementById('note').value.trim(),
+    periodo: periodo(),
+    dettaglio: dettaglio(),
+    dataRichiesta: oggi(),
+    inizioMs: inizioMs(),
+    preavvisoOre: (function(){ var p=preavvisoOre(); return p===null?null:Math.round(p); })(),
+    soglia: sogliaPreavviso(),
+    urgente: isUrgente()
+  };
+}
+function oggetto(){
+  var d=datiRichiesta();
+  var base='RICHIESTA '+d.tipoLabel+' — '+d.nome+' — '+d.sede+' — '+d.periodo;
+  return d.urgente ? 'URGENTE — '+base : base;
+}
+function corpoTesto(){
+  var d=datiRichiesta(), r=[];
+  r.push('RICHIESTA DI '+d.tipoLabel); r.push('');
+  r.push('Data richiesta: '+d.dataRichiesta);
+  r.push('Sede: '+d.sede);
+  r.push('Dipendente: '+d.nome);
+  if(d.mansione) r.push('Mansione: '+d.mansione);
+  r.push(''); r.push(d.dettaglio);
+  if(d.preavvisoOre!==null){ r.push(''); r.push('Preavviso: circa '+Math.max(0,d.preavvisoOre)+' ore'+(d.urgente?' — URGENTE (sotto la soglia di '+d.soglia+' ore)':'')); }
+  if(d.email||d.telefono){ r.push(''); r.push('Recapiti:'); if(d.email) r.push('E-mail: '+d.email); if(d.telefono) r.push('Telefono: '+d.telefono); }
+  if(d.note){ r.push(''); r.push('Note: '+d.note); }
+  return r.join('\n');
+}
+function mostraErrori(e){
+  if(e.length){
+    errore.innerHTML='⚠ '+e.join('<br>⚠ ');
+    errore.classList.add('visibile');
+    esito.classList.remove('visibile');
+    return true;
+  }
+  errore.classList.remove('visibile');
+  return false;
+}
+function esitoOK(){
+  esito.className='esito ok visibile';
+  esito.innerHTML='✔ <strong>Richiesta inviata all\'ufficio personale.</strong> Se hai indicato un\'e-mail, tieni d\'occhio la posta per l\'esito.';
+}
+function esitoErrore(){
+  esito.className='esito ko visibile';
+  esito.innerHTML='⚠ <strong>Non è stato possibile inviare in automatico.</strong> Premi "Copia il testo" e incollalo in una mail a '+DESTINATARIO+', oppure riprova tra poco.';
+  anteprima();
+}
+function anteprima(){
+  var a=document.getElementById('anteprima');
+  a.textContent='A: '+DESTINATARIO+'\nOggetto: '+oggetto()+'\n\n'+corpoTesto();
+  a.style.display='block';
+}
+
+document.getElementById('btnInvia').addEventListener('click', function(){
+  if(mostraErrori(verifica())) return;
+  if(!ENDPOINT){
+    esito.className='esito ko visibile';
+    esito.innerHTML='⚠ Il modulo non è ancora collegato al server. Avvisa l\'ufficio personale (manca l\'indirizzo ENDPOINT).';
+    return;
+  }
+  var btn=this, txt=btn.textContent;
+  btn.disabled=true; btn.textContent='Invio in corso…';
+  esito.classList.remove('visibile');
+  fetch(ENDPOINT, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(datiRichiesta())
+  }).then(function(){ esitoOK(); })
+    .catch(function(){ esitoErrore(); })
+    .finally(function(){ btn.disabled=false; btn.textContent=txt; });
+});
+
+document.getElementById('btnCopia').addEventListener('click', function(){
+  if(mostraErrori(verifica())) return;
+  var testo='A: '+DESTINATARIO+'\nOggetto: '+oggetto()+'\n\n'+corpoTesto();
+  var btn=this;
+  navigator.clipboard.writeText(testo).then(function(){
+    btn.textContent='Testo copiato'; setTimeout(function(){ btn.textContent='Copia il testo'; },2500);
+  }).catch(function(){ anteprima(); });
+});
+</script>
+
+</body>
+</html>
