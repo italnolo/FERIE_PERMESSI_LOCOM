@@ -70,6 +70,19 @@
     margin-top:14px;max-height:260px;overflow:auto;}
   footer{background:var(--inchiostro);color:#7E8894;font-size:12px;padding:14px 28px}
   .nascosto{display:none !important}
+  .gate{position:fixed;inset:0;background:var(--fondo);display:flex;align-items:center;
+    justify-content:center;padding:20px;z-index:50}
+  .gate-box{background:var(--bianco);border:1px solid var(--linea);border-top:4px solid var(--arancio);
+    border-radius:10px;padding:28px 24px;max-width:360px;width:100%;text-align:center}
+  .gate-box h2{margin:0 0 6px;font-size:20px}
+  .gate-box p{margin:0 0 18px;color:var(--grigio);font-size:14px}
+  .gate-box input{width:100%;font-size:18px;text-align:center;letter-spacing:2px;padding:12px;
+    border:1px solid var(--linea);border-radius:6px;margin-bottom:12px}
+  .gate-box input:focus{outline:none;border-color:var(--arancio);box-shadow:0 0 0 3px rgba(242,120,10,.2)}
+  .gate-box button{width:100%;font-size:16px;font-weight:700;padding:13px;border:none;border-radius:7px;
+    background:var(--arancio);color:#fff;cursor:pointer}
+  .gate-box button:hover{background:var(--arancio-scuro)}
+  .gate-err{color:#C22B2B;font-size:14px;margin-top:12px;min-height:18px}
 </style>
 </head>
 <body>
@@ -79,7 +92,17 @@
   <div class="etichetta">Portale Richieste</div>
 </header>
 
-<main>
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <h2>Accesso riservato</h2>
+    <p>Inserisci il codice per accedere al modulo richieste.</p>
+    <input type="password" id="codiceAccesso" autocomplete="off" placeholder="Codice">
+    <button type="button" id="btnAccedi">Entra</button>
+    <div class="gate-err" id="gateErr"></div>
+  </div>
+</div>
+
+<main style="display:none">
   <h1>Richiesta ferie e permessi</h1>
   <p class="intro">Compila i campi e premi <strong>Invia la richiesta</strong>. La richiesta viene inviata direttamente all'ufficio personale, con il riepilogo in PDF allegato. Riceverai conferma qui sotto.</p>
 
@@ -172,10 +195,15 @@
    ============================================================ */
 
 // 1) Incolla qui l'URL dell'App web di Google Apps Script (finisce con /exec)
-var ENDPOINT = "https://script.google.com/macros/s/AKfycbwtWwPmgKyo6bJ_jYAvatPzD9AIdbB2HzQE-byBOn1xxNZyFTlfdIO6wlgBsYiekowL/exec";
+var ENDPOINT = "https://script.google.com/macros/s/AKfycbyvKyJJME_vjsrgudZyFxjVrHZCeXwTiliYPrgeuBeE9SCo6lGxl-dfIVjrfcI1ZwvD/exec";
 
 // 2) Solo informativo (l'invio reale avviene dal motore Google)
 var DESTINATARIO = "gestionepersonalelocom@gmail.com";
+
+// 4) Accesso con codice. Qui c'è solo l'IMPRONTA (hash SHA-256) del codice, MAI il codice
+//    in chiaro. La verifica vera avviene nel motore (Codice.gs). Codice attuale: ITN2026
+var CODICE_HASH = "1b1d0bcfb3145244c5339a7e9cd5b1a6ac3ff1425bf2fbd94210f870c0a2889f";
+var codiceCorrente = "";
 
 // 3) Preavviso minimo (in ore) sotto cui la richiesta parte con oggetto "URGENTE".
 //    Differenziato per tipo. DEVE coincidere con gli stessi valori in Codice.gs.
@@ -405,6 +433,7 @@ function datiRichiesta(){
     periodo: periodo(),
     dettaglio: dettaglio(),
     dataRichiesta: oggi(),
+    codice: codiceCorrente,
     inizioMs: inizioMs(),
     preavvisoOre: (function(){ var p=preavvisoOre(); return p===null?null:Math.round(p); })(),
     soglia: sogliaPreavviso(),
@@ -481,6 +510,25 @@ document.getElementById('btnCopia').addEventListener('click', function(){
     btn.textContent='Testo copiato'; setTimeout(function(){ btn.textContent='Copia il testo'; },2500);
   }).catch(function(){ anteprima(); });
 });
+// --- Accesso con codice (feedback a schermo; la verifica vera è nel motore) ---
+async function sha256hex(s){
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+async function verificaCodice(){
+  var err=document.getElementById('gateErr');
+  var v=document.getElementById('codiceAccesso').value.trim();
+  if(!v){ err.textContent='Inserisci il codice.'; return; }
+  try{
+    if(await sha256hex(v) === CODICE_HASH){
+      codiceCorrente=v;
+      document.getElementById('gate').style.display='none';
+      document.querySelector('main').style.display='';
+    } else { err.textContent='Codice errato.'; }
+  }catch(e){ err.textContent='Errore nella verifica. Riprova.'; }
+}
+document.getElementById('btnAccedi').addEventListener('click', verificaCodice);
+document.getElementById('codiceAccesso').addEventListener('keydown', function(e){ if(e.key==='Enter') verificaCodice(); });
 </script>
 
 </body>
