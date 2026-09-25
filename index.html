@@ -53,6 +53,7 @@
     border-radius:7px;cursor:pointer;background:var(--arancio);color:var(--bianco);}
   button:hover{background:var(--arancio-scuro)}
   button:disabled{opacity:.6;cursor:default}
+  button#btnInvia.inviato{background:#2E7D32;opacity:1;color:#fff;cursor:default}
   button:focus-visible{outline:3px solid rgba(242,120,10,.5);outline-offset:2px}
   button.secondario{background:transparent;color:var(--grigio);border:1px solid var(--linea);
     font-size:14px;padding:13px 18px}
@@ -470,7 +471,9 @@ function mostraErrori(e){
 }
 function esitoOK(){
   esito.className='esito ok visibile';
-  esito.innerHTML='✔ <strong>Richiesta inviata all\'ufficio personale.</strong> Se hai indicato un\'e-mail, tieni d\'occhio la posta per l\'esito.';
+  esito.innerHTML=`✔ <strong>Richiesta inviata all'ufficio personale.</strong> Se hai indicato un'e-mail, riceverai la ricevuta.<br><button type="button" id="btnNuova" class="secondario" style="margin-top:12px">Invia un'altra richiesta</button>`;
+  var b=document.getElementById('btnNuova');
+  if(b){ b.addEventListener('click', function(){ location.reload(); }); }
 }
 function esitoErrore(){
   esito.className='esito ko visibile';
@@ -483,23 +486,32 @@ function anteprima(){
   a.style.display='block';
 }
 
+var giaInviato=false;
 document.getElementById('btnInvia').addEventListener('click', function(){
+  if(giaInviato) return;
   if(mostraErrori(verifica())) return;
   if(!ENDPOINT){
     esito.className='esito ko visibile';
     esito.innerHTML='⚠ Il modulo non è ancora collegato al server. Avvisa l\'ufficio personale (manca l\'indirizzo ENDPOINT).';
     return;
   }
-  var btn=this, txt=btn.textContent;
+  var btn=this;
+  giaInviato=true;
   btn.disabled=true; btn.textContent='Invio in corso…';
   esito.classList.remove('visibile');
   fetch(ENDPOINT, {
     method:'POST', mode:'no-cors',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify(datiRichiesta())
-  }).then(function(){ esitoOK(); })
-    .catch(function(){ esitoErrore(); })
-    .finally(function(){ btn.disabled=false; btn.textContent=txt; });
+  }).then(function(){
+    btn.classList.add('inviato');
+    btn.textContent='✓ Richiesta inviata';
+    esitoOK();
+  }).catch(function(){
+    giaInviato=false;
+    btn.disabled=false; btn.textContent='Invia la richiesta';
+    esitoErrore();
+  });
 });
 
 document.getElementById('btnCopia').addEventListener('click', function(){
