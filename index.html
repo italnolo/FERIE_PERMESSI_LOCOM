@@ -6,7 +6,7 @@
 <title>Lo.Com — Richiesta Ferie e Permessi</title>
 <style>
   :root{
-    --blu:#1A73E8; --blu-scuro:#1557B0;
+    --blu:#F2780A; --blu-scuro:#C85F00;
     --rosso:#D93025; --verde:#1E8E3E;
     --grigio:#5F6368; --bordo:#DADCE0; --sfondo:#F5F6F8;
   }
@@ -28,7 +28,7 @@
   .chip{padding:9px 14px;border:1px solid var(--bordo);border-radius:20px;background:#fff;font-size:14px;cursor:pointer;user-select:none}
   .chip.on{background:var(--blu);border-color:var(--blu);color:#fff;font-weight:600}
   .hint{font-size:12px;color:var(--grigio);margin-top:6px;line-height:1.4}
-  .anteprima{background:#E8F0FE;border:1px solid #AECBFA;border-radius:8px;padding:12px;font-size:14px;line-height:1.6}
+  .anteprima{background:#FFF4E8;border:1px solid #F5C99A;border-radius:8px;padding:12px;font-size:14px;line-height:1.6}
   .anteprima b{color:var(--blu-scuro)}
   button.invia{width:100%;padding:15px;font-size:16px;font-weight:700;color:#fff;background:var(--blu);border:0;border-radius:10px;cursor:pointer;margin-top:6px}
   button.invia:disabled{background:#BDC1C6;cursor:not-allowed}
@@ -48,7 +48,7 @@
 
 <header>
   <h1>Richiesta Ferie e Permessi</h1>
-  <p>Lo.Com · da inviare al Rental Manager per l'autorizzazione</p>
+  <p>Lo.Com · da inviare alla Gestione del Personale per l'autorizzazione</p>
 </header>
 
 <div class="card">
@@ -196,7 +196,7 @@
   <div class="anteprima" id="anteprima">—</div>
   <button class="invia" id="btnWa">💬 Invia richiesta via WhatsApp</button>
   <button class="secondaria" id="btnMail" style="margin-top:10px">📧 Invia richiesta via Email</button>
-  <div class="hint">La richiesta arriva al Rental Manager, che la autorizza e la registra a calendario. Il testo è modificabile prima dell'invio.</div>
+  <div class="hint">La richiesta arriva alla Gestione del Personale, che la autorizza e la registra a calendario. Il testo è modificabile prima dell'invio.</div>
   <div class="esito" id="esito"></div>
 </div>
 
@@ -209,14 +209,9 @@
 
 <script>
 /* ============================================================
-   DESTINATARI — Rental Manager che ricevono la richiesta
+   DESTINATARIO — la richiesta va alla Gestione del Personale
    ============================================================ */
-const RM = {
-  Nord: { nome: "Fabrizio", mail: "fabriziocaiti@italnolo.it", wa: "393497416663" },
-  Sud:  { nome: "Emiliano", mail: "allrentpisa@gmail.com",     wa: "" }
-};
-// sedi di competenza: tutto il resto è Nord
-const SEDI_SUD = ["Pisa","Lucca","Pontedera","Empoli"];
+const DEST = { nome: "Gestione Personale", mail: "gestionepersonalelocom@gmail.com", wa: "" };
 /* ============================================================ */
 
 const $ = id => document.getElementById(id);
@@ -295,14 +290,11 @@ function periodoTesto(d){
   return "il " + itDate(d.data) + " dalle " + d.oraInizio + " alle " + d.oraFine + " (" + d.ore + " ore)";
 }
 
-function destinatario(sede){ return SEDI_SUD.includes(sede) ? RM.Sud : RM.Nord; }
-
 function testoRichiesta(d){
-  const rm = destinatario(d.sede);
-  let t = "Ciao " + rm.nome + ",\nrichiesta di " + d.tipo.toLowerCase() + " per " +
+  let t = "Richiesta di " + d.tipo.toLowerCase() + " per " +
           d.nome + " (" + d.sede + ") " + periodoTesto(d) + ".";
   if (d.note) t += "\n\nNote: " + d.note;
-  t += "\n\nIn attesa della tua autorizzazione. Grazie.";
+  t += "\n\nIn attesa di autorizzazione. Grazie.";
   return t;
 }
 
@@ -314,13 +306,11 @@ function aggiorna(){
     okBtn.forEach(b => b.disabled = true); return;
   }
   okBtn.forEach(b => b.disabled = false);
-  const rm = destinatario(d.sede);
   $("anteprima").innerHTML =
     "<b>" + d.tipo + "</b> — " + d.nome + " (" + d.sede + ")<br>" +
     periodoTesto(d).charAt(0).toUpperCase() + periodoTesto(d).slice(1) +
     (d.note ? "<br>Note: " + d.note : "") +
-    "<br><span style='color:#5F6368;font-size:12px'>Destinatario: " + rm.nome + " (RM " +
-    (SEDI_SUD.includes(d.sede) ? "Area Sud" : "Area Nord") + ")</span>";
+    "<br><span style='color:#5F6368;font-size:12px'>Destinatario: Gestione del Personale</span>";
 }
 
 function registraStorico(d){
@@ -334,22 +324,20 @@ function registraStorico(d){
 
 $("btnWa").addEventListener("click", () => {
   const d = datiForm(); if(!d) return;
-  const rm = destinatario(d.sede);
-  window.open("https://wa.me/" + rm.wa + "?text=" + encodeURIComponent(testoRichiesta(d)), "_blank");
+  window.open("https://wa.me/" + DEST.wa + "?text=" + encodeURIComponent(testoRichiesta(d)), "_blank");
   $("esito").className = "esito ok";
-  $("esito").innerHTML = "→ WhatsApp aperto verso <b>" + rm.nome + "</b>. Controlla e invia.";
+  $("esito").innerHTML = "✅ Richiesta inviata";
   registraStorico(d); $("note").value = ""; aggiorna();
 });
 
 $("btnMail").addEventListener("click", () => {
   const d = datiForm(); if(!d) return;
-  const rm = destinatario(d.sede);
   const ogg = "Richiesta " + d.tipo.toLowerCase() + " — " + d.nome + " (" + d.sede + ")";
-  window.location.href = "mailto:" + encodeURIComponent(rm.mail) +
+  window.location.href = "mailto:" + encodeURIComponent(DEST.mail) +
     "?subject=" + encodeURIComponent(ogg) +
     "&body="    + encodeURIComponent(testoRichiesta(d));
   $("esito").className = "esito ok";
-  $("esito").innerHTML = "→ Email aperta verso <b>" + rm.nome + "</b>. Controlla e invia.";
+  $("esito").innerHTML = "✅ Richiesta inviata";
   registraStorico(d); aggiorna();
 });
 
